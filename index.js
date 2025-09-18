@@ -68,5 +68,9 @@ app.post("/sendemail", function (req, res) {
 
 })
 
+app.get("/", (req, res) => {
+  res.send("BulkMail backend is running ✅")
+})
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
