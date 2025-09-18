@@ -9,6 +9,12 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
+app.use(cors({
+  origin:  'https://bulk-mail-frontend-xkyo.vercel.app', 
+  methods: ['GET','POST'],
+  credentials: true
+}))
+
 mongoose.connect(process.env.MONGO_URI)
     .then(function () {
         console.log("Connected to DB")
