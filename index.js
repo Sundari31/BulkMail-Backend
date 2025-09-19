@@ -23,49 +23,81 @@ mongoose.connect(process.env.MONGO_URI)
 
 const credential = mongoose.model("credential", {}, "bulkmail")
 
-app.post("/sendemail", function (req, res) {
-    var msg = req.body.msg
-    var emailList = req.body.emailList
+// app.post("/sendemail", function (req, res) {
+//     var msg = req.body.msg
+//     var emailList = req.body.emailList
 
-    credential.find().then(function (data) {
+//     credential.find().then(function (data) {
 
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            }
-        })
+//         const transporter = nodemailer.createTransport({
+//             service: "gmail",
+//             auth: {
+//                 user: process.env.EMAIL_USER,
+//                 pass: process.env.EMAIL_PASS,
+//             }
+//         })
 
-        new Promise(async function (resolve, reject) {
-            try {
-                for (var i = 0; i < emailList.length; i++) {
-                    await transporter.sendMail(
-                        {
-                            from: "sundarimuthaiah2004@gmail.com",
-                            to: emailList[i],
-                            subject: "A message from BulkMail App",
-                            text: msg
-                        }
-                    )
-                    console.log("Email sent to:" + emailList[i])
-                }
-                resolve("Success")
-            }
-            catch (error) {
-                reject("Failed")
-            }
-        }).then(function () {
-            res.send(true)
-        }).catch(function () {
-            res.send(false)
-        })
+//         new Promise(async function (resolve, reject) {
+//             try {
+//                 for (var i = 0; i < emailList.length; i++) {
+//                     await transporter.sendMail(
+//                         {
+//                             from: "sundarimuthaiah2004@gmail.com",
+//                             to: emailList[i],
+//                             subject: "A message from BulkMail App",
+//                             text: msg
+//                         }
+//                     )
+//                     console.log("Email sent to:" + emailList[i])
+//                 }
+//                 resolve("Success")
+//             }
+//             catch (error) {
+//                 reject("Failed")
+//             }
+//         }).then(function () {
+//             res.send(true)
+//         }).catch(function () {
+//             res.send(false)
+//         })
 
-    }).catch(function (error) {
-        console.log(error)
-    })
+//     }).catch(function (error) {
+//         console.log(error)
+//     })
 
-})
+// })
+
+app.post("/sendemail", async (req, res) => {
+  try {
+    const { msg, emailList } = req.body;
+
+    // make sure DB connection works
+    await credential.find();
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      }
+    });
+
+    for (let i = 0; i < emailList.length; i++) {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: emailList[i],
+        subject: "A message from BulkMail App",
+        text: msg
+      });
+      console.log("✅ Email sent to:", emailList[i]);
+    }
+
+    res.json({ success: true, message: "All emails sent!" });
+  } catch (err) {
+    console.error("❌ Error sending emails:", err);
+    res.status(500).json({ success: false, message: "Failed to send emails" });
+  }
+});
 
 app.get("/", (req, res) => {
   res.send("BulkMail backend is running ✅")
