@@ -33,7 +33,7 @@ app.post("/sendemail", function (req, res) {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       }
-    });
+    })
 
     new Promise(async (resolve, reject) => {
       try {
@@ -43,24 +43,23 @@ app.post("/sendemail", function (req, res) {
             to: emailList[i],
             subject: "A message from BulkMail App",
             text: msg
-          });
-          console.log("Email sent to: " + emailList[i]);
+          })
+          console.log("Email sent to: " + emailList[i])
         }
-        resolve("Success");
+        resolve("Success")
       } catch (error) {
-        console.error(error);
-        reject("Failed");
+        console.error(error)
+        reject("Failed")
       }
     }).then(() => {
-      res.send(true);
-    }).catch(() => {
-      res.send(false);
-    });
+      res.json({ success: true })   
+      res.json({ success: false })  
+    })
   }).catch(err => {
-    console.error(err);
-    res.send(false);
-  });
-});
+    console.error(err)
+    res.json({ success: false })   
+  })
+})
 
 app.get("/", (req, res) => {
   res.send("BulkMail backend is running ✅")
