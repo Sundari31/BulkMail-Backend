@@ -9,7 +9,11 @@ const app = express()
 app.use(express.json())
 
 app.use(cors({
-  origin:  'https://bulk-mail-frontend-xkyo.vercel.app', 
+ // origin:  'https://bulk-mail-frontend-xkyo.vercel.app', 
+ origin: [
+  "https://bulk-mail-frontend-xkyo.vercel.app",
+  "https://bulk-mail-frontend-eta.vercel.app"
+],
   methods: ['GET','POST'],
   credentials: true
 }))
@@ -67,13 +71,10 @@ const credential = mongoose.model("credential", {}, "bulkmail")
 
 // })
 
-app.post("/sendemail", async (req, res) => {
-  try {
-    const { msg, emailList } = req.body;
+app.post("/sendemail", function (req, res) {
+  const { msg, emailList } = req.body;
 
-    // make sure DB connection works
-    await credential.find();
-
+  credential.find().then(function () {
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -82,21 +83,31 @@ app.post("/sendemail", async (req, res) => {
       }
     });
 
-    for (let i = 0; i < emailList.length; i++) {
-      await transporter.sendMail({
-        from: process.env.EMAIL_USER,
-        to: emailList[i],
-        subject: "A message from BulkMail App",
-        text: msg
-      });
-      console.log("✅ Email sent to:", emailList[i]);
-    }
-
-    res.json({ success: true, message: "All emails sent!" });
-  } catch (err) {
-    console.error("❌ Error sending emails:", err);
-    res.status(500).json({ success: false, message: "Failed to send emails" });
-  }
+    new Promise(async (resolve, reject) => {
+      try {
+        for (let i = 0; i < emailList.length; i++) {
+          await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: emailList[i],
+            subject: "A message from BulkMail App",
+            text: msg
+          });
+          console.log("Email sent to: " + emailList[i]);
+        }
+        resolve("Success");
+      } catch (error) {
+        console.error(error);
+        reject("Failed");
+      }
+    }).then(() => {
+      res.send(true);
+    }).catch(() => {
+      res.send(false);
+    });
+  }).catch(err => {
+    console.error(err);
+    res.send(false);
+  });
 });
 
 app.get("/", (req, res) => {
