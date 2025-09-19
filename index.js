@@ -24,7 +24,8 @@ mongoose.connect(process.env.MONGO_URI)
 const credential = mongoose.model("credential", {}, "bulkmail")
 
 app.post("/sendemail", function (req, res) {
-  const { msg, emailList } = req.body;
+    console.log("Incoming request:", req.body)
+  const { msg, emailList } = req.body
 
   credential.find().then(function () {
     const transporter = nodemailer.createTransport({
