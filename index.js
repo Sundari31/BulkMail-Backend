@@ -1,70 +1,67 @@
-const express = require("express")
-const cors = require("cors")
-const nodemailer = require("nodemailer")
-const mongoose = require("mongoose")
-require("dotenv").config()
+const express = require("express");
+const cors = require("cors");
+const nodemailer = require("nodemailer");
+const mongoose = require("mongoose");
+require("dotenv").config();
 
-const app = express()
+const app = express();
+app.use(express.json());
 
-app.use(express.json())
-
+// ✅ FIXED CORS (Correct Vercel domain)
 app.use(cors({
- origin:  'https://bulk-mail-frontend-xkyo.vercel.app',
-  methods: ['GET','POST'],
+  origin: "https://bulk-mail-frontend-ftuz.vercel.app",
+  methods: ["GET", "POST"],
   credentials: true
-}))
+}));
 
+// Database
 mongoose.connect(process.env.MONGO_URI)
-    .then(function () {
-        console.log("Connected to DB")
-    }).catch(function () {
-        console.log("Failed to Connect")
-    })
+  .then(() => console.log("Connected to DB"))
+  .catch(() => console.log("Failed to connect to DB"));
 
-const credential = mongoose.model("credential", {}, "bulkmail")
+const credential = mongoose.model("credential", {}, "bulkmail");
 
-app.post("/sendemail", function (req, res) {
-    console.log("Incoming request:", req.body)
-  const { msg, emailList } = req.body
+// ✅ FIXED MAIL ROUTE (working, clean, single response)
+app.post("/sendemail", async (req, res) => {
+  console.log("Incoming request:", req.body);
 
-  credential.find().then(function () {
+  const { msg, emailList } = req.body;
+
+  try {
+    await credential.find();  // DB check
+
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       }
-    })
+    });
 
-    new Promise(async (resolve, reject) => {
-      try {
-        for (let i = 0; i < emailList.length; i++) {
-          await transporter.sendMail({
-            from: process.env.EMAIL_USER,
-            to: emailList[i],
-            subject: "A message from BulkMail App",
-            text: msg
-          })
-          console.log("Email sent to: " + emailList[i])
-        }
-        resolve("Success")
-      } catch (error) {
-        console.error(error)
-        reject("Failed")
-      }
-    }).then(() => {
-      res.json({ success: true })   
-      res.json({ success: false })  
-    })
-  }).catch(err => {
-    console.error(err)
-    res.json({ success: false })   
-  })
-})
+    // Loop through email list and send emails
+    for (let email of emailList) {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "A message from BulkMail App",
+        text: msg
+      });
+      console.log("Email sent to:", email);
+    }
 
+    // Send only ONE response
+    return res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    return res.json({ success: false });
+  }
+});
+
+// Test route
 app.get("/", (req, res) => {
-  res.send("BulkMail backend is running ✅")
-})
+  res.send("BulkMail backend is running ✅");
+});
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
