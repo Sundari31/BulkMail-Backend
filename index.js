@@ -11,7 +11,6 @@ app.use(express.json());
 app.use(cors({
   origin: [
     "https://bulk-mail-frontend-five.vercel.app",   // NEW DOMAIN
-    "https://bulk-mail-frontend-ftuz.vercel.app"    // OLD DOMAIN
   ],
   methods: ["GET", "POST"],
   credentials: true
