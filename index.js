@@ -9,7 +9,10 @@ app.use(express.json());
 
 // ✅ FIXED CORS (Correct Vercel domain)
 app.use(cors({
-  origin: "https://bulk-mail-frontend-ftuz.vercel.app",
+  origin: [
+    "https://bulk-mail-frontend-five.vercel.app",   // NEW DOMAIN
+    "https://bulk-mail-frontend-ftuz.vercel.app"    // OLD DOMAIN
+  ],
   methods: ["GET", "POST"],
   credentials: true
 }));
